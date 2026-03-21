@@ -48,6 +48,9 @@ async def chat_completions(request: Request):
             if not system_found:
                 messages.insert(0, {"role": "system", "content": tool_system_prompt})
         
+        # 判断模式并获取 token
+        determine_mode_and_token(request)
+        
         # 使用 messages_prepare 函数构造最终 prompt
         final_prompt = messages_prepare(messages)
         session_id = create_session(request)
