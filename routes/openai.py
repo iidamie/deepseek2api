@@ -95,17 +95,96 @@ async def chat_completions(request: Request):
 async def handle_non_stream_response(request: Request, resp, session_id: str, model: str, tools: list):
     """处理非流式响应"""
     try:
-        data = resp.json()
+        # 非流式响应实际上也是 SSE 格式，需要逐行解析
+        logger.info(f"[handle_non_stream_response] 开始处理非流式响应")
         
-        if data.get("code") != 0:
-            error_msg = data.get("msg", "Unknown error")
-            logger.error(f"[handle_non_stream_response] DeepSeek API 错误: {error_msg}")
-            raise HTTPException(status_code=500, detail=error_msg)
+        think_list = []
+        text_list = []
+        ptype = "text"
         
-        content = data["data"]["biz_data"]["choices"][0]["message"]["content"]
+        for raw_line in resp.iter_lines():
+            try:
+                line = raw_line.decode("utf-8")
+            except Exception as e:
+                logger.warning(f"[handle_non_stream_response] 解码失败: {e}")
+                continue
+            
+            if not line:
+                continue
+            
+            if line.startswith("data:"):
+                data_str = line[5:].strip()
+                if data_str == "[DONE]":
+                    break
+                
+                try:
+                    chunk = json.loads(data_str)
+                    
+                    # 提取 v 字段
+                    if "v" in chunk:
+                        v_value = chunk["v"]
+                        
+                        if "p" in chunk and chunk.get("p") == "response/status":
+                            if v_value == 'FINISHED':
+                                break
+                            continue
+                        
+                        if "p" in chunk and chunk.get("p") == "response/search_status":
+                            continue
+                        
+                        if "p" in chunk and chunk.get("p") == "response/thinking_content":
+                            ptype = "thinking"
+                        elif "p" in chunk and chunk.get("p") == "response/content":
+                            ptype = "text"
+                        
+                        # 处理字符串形式的 v 值（即文本内容）
+                        if isinstance(v_value, str):
+                            if ptype == "thinking":
+                                think_list.append(v_value)
+                            else:
+                                text_list.append(v_value)
+                        
+                        # 处理数组更新如状态变更
+                        elif isinstance(v_value, list):
+                            for item in v_value:
+                                if item.get("p") == "status" and item.get("v") == "FINISHED":
+                                    break
+                
+                except Exception as e:
+                    logger.warning(f"[handle_non_stream_response] 无法解析: {data_str}, 错误: {e}")
+                    continue
+        
+        # 构建最终内容
+        final_reasoning = "".join(think_list)
+        final_content = "".join(text_list)
+        
+        logger.info(f"[handle_non_stream_response] 收集完成: reasoning={len(final_reasoning)} chars, content={len(final_content)} chars")
         
         # 解析工具调用
-        clean_content, tool_calls = parse_tool_calls_from_text(content) if tools else (content, [])
+        tool_calls_detected = None
+        if tools:
+            tool_calls_detected, final_content = parse_tool_calls_from_text(final_content)
+        
+        # 估算 token 数
+        prompt_tokens = 0  # 简单估算
+        reasoning_tokens = len(final_reasoning) // 4
+        completion_tokens = len(final_content) // 4
+        
+        # 构建 message 对象
+        message_obj = {
+            "role": "assistant",
+            "content": final_content,
+        }
+        
+        # 添加 reasoning_content（如果有）
+        if final_reasoning:
+            message_obj["reasoning_content"] = final_reasoning
+        
+        # 如果检测到 tool_calls，添加到 message
+        finish_reason = "stop"
+        if tool_calls_detected:
+            message_obj["tool_calls"] = tool_calls_detected
+            finish_reason = "tool_calls"
         
         # 构造 OpenAI 格式响应
         response = {
@@ -116,22 +195,19 @@ async def handle_non_stream_response(request: Request, resp, session_id: str, mo
             "choices": [
                 {
                     "index": 0,
-                    "message": {
-                        "role": "assistant",
-                        "content": clean_content,
-                    },
-                    "finish_reason": "stop",
+                    "message": message_obj,
+                    "finish_reason": finish_reason,
                 }
             ],
             "usage": {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": 0,
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": reasoning_tokens + completion_tokens,
+                "total_tokens": prompt_tokens + reasoning_tokens + completion_tokens,
+                "completion_tokens_details": {
+                    "reasoning_tokens": reasoning_tokens
+                },
             },
         }
-        
-        if tool_calls:
-            response["choices"][0]["message"]["tool_calls"] = tool_calls
         
         # 删除会话
         mode = "config" if hasattr(request.state, "use_config_token") and request.state.use_config_token else "user"
