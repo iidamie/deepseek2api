@@ -71,7 +71,7 @@ def create_session(request: Request):
                 logger.error(f"[create_session] 创建会话返回错误: {data.get('msg')}")
                 return None
             
-            session_id = data.get("data", {}).get("chat_session_id")
+            session_id = data["data"]["biz_data"]["id"]
             if not session_id:
                 logger.error("[create_session] 响应中缺少 session_id")
                 return None
