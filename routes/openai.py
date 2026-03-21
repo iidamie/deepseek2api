@@ -40,14 +40,40 @@ async def chat_completions(request: Request):
         stream = body.get("stream", False)
         tools = body.get("tools", [])
         
+        # 判断是否启用思考模式
+        thinking_enabled = "reasoner" in model.lower() or "r1" in model.lower()
+        search_enabled = False
+        
         # 认证
         determine_mode_and_token(request)
         token = request.state.deepseek_token
         if not token:
             raise HTTPException(status_code=401, detail="Unauthorized")
         
+        # 处理工具调用
+        if tools:
+            # 构造工具系统提示
+            tool_descriptions = []
+            for tool in tools:
+                func = tool.get("function", {})
+                tool_descriptions.append(
+                    f"- {func.get('name')}: {func.get('description', '')}"
+                )
+            
+            tool_system_prompt = (
+                "You have access to the following tools:\n"
+                + "\n".join(tool_descriptions)
+                + "\n\nTo use a tool, respond with: <tool_call>{\"name\": \"tool_name\", \"arguments\": {...}}</tool_call>"
+            )
+            
+            # 将工具提示插入到消息开头
+            if messages and messages[0].get("role") == "system":
+                messages[0]["content"] = tool_system_prompt + "\n\n" + messages[0]["content"]
+            else:
+                messages.insert(0, {"role": "system", "content": tool_system_prompt})
+        
         # 准备消息
-        messages = messages_prepare(messages)
+        final_prompt = messages_prepare(messages)
         
         # 创建会话
         session_id = create_session(request)
@@ -59,17 +85,22 @@ async def chat_completions(request: Request):
         if not pow_answer:
             raise HTTPException(status_code=401, detail="Failed to get PoW response")
         
+        # 构建请求头和负载
+        from auth.token import get_auth_headers
+        headers = get_auth_headers(request)
+        
+        payload = {
+            "chat_session_id": session_id,
+            "parent_message_id": None,
+            "prompt": final_prompt,
+            "ref_file_ids": [],
+            "thinking_enabled": thinking_enabled,
+            "search_enabled": search_enabled,
+        }
+        
         # 调用 DeepSeek API
         try:
-            resp = call_deepseek_completion(
-                token=token,
-                session_id=session_id,
-                messages=messages,
-                model=model,
-                temperature=temperature,
-                stream=stream,
-                pow_answer=pow_answer,
-            )
+            resp = call_deepseek_completion(headers, payload, stream=stream)
         except Exception as e:
             logger.error(f"[chat_completions] 调用 DeepSeek API 失败: {e}")
             delete_deepseek_session(request, session_id)
