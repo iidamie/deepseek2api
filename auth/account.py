@@ -1,4 +1,4 @@
-import requests
+from curl_cffi import requests
 import threading
 from fastapi import HTTPException
 from utils.logger import logger

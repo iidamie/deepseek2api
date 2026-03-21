@@ -1,4 +1,4 @@
-import requests
+from curl_cffi import requests
 from fastapi import Request, HTTPException
 from utils.logger import logger
 from auth.token import get_auth_headers

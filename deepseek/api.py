@@ -1,4 +1,4 @@
-import requests
+from curl_cffi import requests
 from utils.logger import logger
 
 # 常量
