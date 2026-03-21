@@ -41,7 +41,8 @@ async def chat_completions(request: Request):
         tools = body.get("tools", [])
         
         # 认证
-        mode, token = determine_mode_and_token(request)
+        determine_mode_and_token(request)
+        token = request.state.deepseek_token
         if not token:
             raise HTTPException(status_code=401, detail="Unauthorized")
         
