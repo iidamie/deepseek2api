@@ -3,6 +3,8 @@ from .claude import (
     claude_to_openai_messages,
     openai_to_claude_response,
     openai_stream_to_claude_stream,
+    convert_claude_to_deepseek,
+    call_claude_via_openai,
 )
 
 __all__ = [
@@ -11,4 +13,6 @@ __all__ = [
     "claude_to_openai_messages",
     "openai_to_claude_response",
     "openai_stream_to_claude_stream",
+    "convert_claude_to_deepseek",
+    "call_claude_via_openai",
 ]

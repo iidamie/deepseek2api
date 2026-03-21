@@ -1,28 +1,12 @@
 {
   "keys": [
-    "key1",
-    "key2"
+    "sk-r0l7FKHzX9j4DXib1vMyTqSxBpRi8lPQGtA1Ox8293WDTlPd"
   ],
   "accounts": [
     {
-      "email": "example1@example.com",
-      "password": "password1",
-      "token": ""
-    },
-    {
-      "email": "example2@example.com",
-      "password": "password2",
-      "token": ""
-    },
-    {
-      "mobile": "12345678901",
-      "password": "password3",
-      "token": ""
-    },
-    {
-      "mobile": "12345678901",
-      "password": "password4",
-      "token": ""
+      "email": "2279897399@qq.com",
+      "password": "a1472583690",
+      "token": "gu7Qc76FSOr3O4yOLIehEYNAZBw+xuLlh4DuzApvA4YqAnDghhZIZQT3BRZ0r6CE"
     }
   ]
 }

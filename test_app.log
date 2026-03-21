@@ -1,0 +1,25 @@
+/usr/local/lib/python3.9/dist-packages/scipy/__init__.py:155: UserWarning: A NumPy version >=1.18.5 and <1.25.0 is required for this version of SciPy (detected version 1.26.4
+  warnings.warn(f"A NumPy version >={np_minversion} and <{np_maxversion}"
+INFO:     Started server process [4158386]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:5001 (Press CTRL+C to quit)
+2026-03-21 18:06:13,337 [INFO] main: [choose_new_account] 新选择账号: idamie1211+40@gmail.com
+2026-03-21 18:06:13,665 [WARNING] main: [create_session] {"code":40003,"msg":"Authorization Failed (invalid token)","data":null}
+2026-03-21 18:06:13,665 [WARNING] main: [create_session] 创建会话失败, code=40003, msg=Authorization Failed (invalid token)
+2026-03-21 18:06:13,665 [INFO] main: [choose_new_account] 新选择账号: idamie1211@gmail.com
+2026-03-21 18:06:14,635 [WARNING] main: [login_deepseek_via_account] {"code":0,"msg":"","data":{"biz_code":0,"biz_msg":"","biz_data":{"code":0,"msg":"","user":{"id":"247d56a8-c9dd-4d07-9ad8-60cda68c2474","token":"Cr9kn01VEEpzQMDPnZeyexaV68TuWS+R0rAcNrhuxPthh8y2SvQ23j7xKs1N5Hj5","email":"ida*****11@gmail.com","mobile_number":"","area_code":"","status":0,"id_profile":null,"id_profiles":[],"chat":{"is_muted":0,"mute_until":null},"has_legacy_chat_history":false,"need_birthday":false}}}}
+2026-03-21 18:06:14,940 [WARNING] main: [create_session] {"code":0,"msg":"","data":{"biz_code":0,"biz_msg":"","biz_data":{"id":"8f0c2027-53c7-4b2e-8494-a4cb83b8d6d2","seq_id":196250774,"agent":"chat","model_type":"DEFAULT","title":null,"title_type":"WIP","version":0,"current_message_id":null,"pinned":false,"inserted_at":1774087574.799,"updated_at":1774087574.799}}}
+INFO:     127.0.0.1:55342 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+2026-03-21 18:06:47,939 [INFO] main: [choose_new_account] 新选择账号: idamie1211+9@gmail.com
+2026-03-21 18:06:49,167 [WARNING] main: [login_deepseek_via_account] {"code":0,"msg":"","data":{"biz_code":0,"biz_msg":"","biz_data":{"code":0,"msg":"","user":{"id":"76808c4b-2c02-4a2c-89ab-b422c6ec300e","token":"s5mdN9T0omLPzA3ce8iPUXB3GJZnHJ01hGoaB0vHE8or5KFPkIOxjUQt9u4TYEJ2","email":"ida******1+9@gmail.com","mobile_number":"","area_code":"","status":0,"id_profile":null,"id_profiles":[],"chat":{"is_muted":0,"mute_until":null},"has_legacy_chat_history":false,"need_birthday":false}}}}
+2026-03-21 18:06:49,483 [WARNING] main: [create_session] {"code":0,"msg":"","data":{"biz_code":0,"biz_msg":"","biz_data":{"id":"d2fcf90f-8d7c-4f81-b68d-0c075da159f8","seq_id":196250809,"agent":"chat","model_type":"DEFAULT","title":null,"title_type":"WIP","version":0,"current_message_id":null,"pinned":false,"inserted_at":1774087609.338,"updated_at":1774087609.338}}}
+INFO:     127.0.0.1:40970 - "POST /v1/chat/completions HTTP/1.1" 200 OK
+2026-03-21 18:06:50,177 [INFO] main: [sse_stream] 客户端断开连接 session=8f0c2027-53c7-4b2e-8494-a4cb83b8d6d2
+2026-03-21 18:06:50,464 [WARNING] main: [sse_stream] 停止生成失败: 422
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [4158386]
+2026-03-21 18:08:33,039 [INFO] main: [sse_stream] 客户端断开连接 session=d2fcf90f-8d7c-4f81-b68d-0c075da159f8
+2026-03-21 18:08:33,343 [WARNING] main: [sse_stream] 停止生成失败: 422

@@ -32,7 +32,11 @@ def login_deepseek_via_account(account):
     if not password:
         raise ValueError("账号缺少密码")
     
-    payload = {"password": password}
+    payload = {
+        "password": password,
+        "device_id": "deepseek2api",
+        "os": "android"
+    }
     if email:
         payload["email"] = email
     elif phone:
@@ -53,7 +57,7 @@ def login_deepseek_via_account(account):
         if data.get("code") != 0:
             raise Exception(f"登录失败: {data.get('msg', 'Unknown error')}")
         
-        token = data["data"]["token"]
+        token = data["data"]["biz_data"]["user"]["token"]
         account["token"] = token
         
         # 更新配置文件

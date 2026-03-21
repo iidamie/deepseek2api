@@ -1,4 +1,5 @@
 from curl_cffi import requests
+import time
 from utils.logger import logger
 
 # 常量
@@ -7,27 +8,43 @@ DEEPSEEK_COMPLETION_URL = f"https://{DEEPSEEK_HOST}/api/v0/chat/completion"
 DEEPSEEK_STOP_STREAM_URL = f"https://{DEEPSEEK_HOST}/api/v0/chat/stop_stream"
 
 
-def call_deepseek_completion(headers: dict, payload: dict, stream: bool = False):
+def call_deepseek_completion(headers: dict, payload: dict, stream: bool = False, max_attempts: int = 3):
     """
-    调用 DeepSeek 对话补全接口
+    调用 DeepSeek 对话补全接口（带重试）
     :param headers: 请求头
     :param payload: 请求体
     :param stream: 是否流式
+    :param max_attempts: 最大重试次数
     :return: Response 对象
     """
-    try:
-        resp = requests.post(
-            DEEPSEEK_COMPLETION_URL,
-            headers=headers,
-            json=payload,
-            stream=stream,
-            impersonate="safari15_3",
-        )
-        return resp
-        
-    except Exception as e:
-        logger.error(f"[call_deepseek_completion] 请求异常: {e}")
-        raise
+    attempts = 0
+    while attempts < max_attempts:
+        try:
+            resp = requests.post(
+                DEEPSEEK_COMPLETION_URL,
+                headers=headers,
+                json=payload,
+                stream=stream,
+                impersonate="safari15_3",
+            )
+            
+            if resp.status_code == 200:
+                return resp
+            else:
+                logger.warning(
+                    f"[call_deepseek_completion] 调用对话接口失败, 状态码: {resp.status_code}"
+                )
+                resp.close()
+                time.sleep(1)
+                attempts += 1
+                
+        except Exception as e:
+            logger.warning(f"[call_deepseek_completion] 请求异常: {e}")
+            time.sleep(1)
+            attempts += 1
+            continue
+    
+    return None
 
 
 def stop_deepseek_stream(token: str, session_id: str, request_id: str) -> bool:

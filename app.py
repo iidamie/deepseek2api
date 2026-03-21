@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from utils.logger import logger
-from routes import models_router, openai_router, claude_router
+from routes import models_router, openai_router, claude_router, utils_router
 
 # 创建 FastAPI 应用
 app = FastAPI(title="DeepSeek2API", version="1.0.0")
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(models_router)
 app.include_router(openai_router)
 app.include_router(claude_router)
+app.include_router(utils_router)
 
 
 @app.get("/")

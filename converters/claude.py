@@ -1,5 +1,79 @@
 import json
+from curl_cffi import requests
 from utils.logger import logger
+
+
+def convert_claude_to_deepseek(claude_request):
+    """
+    将 Claude 请求转换为 DeepSeek 格式
+    :param claude_request: Claude 格式的请求
+    :return: DeepSeek 格式的请求
+    """
+    messages = claude_request.get("messages", [])
+    system_prompt = claude_request.get("system", "")
+    
+    # 构造 OpenAI 格式的消息
+    openai_messages = []
+    if system_prompt:
+        openai_messages.append({"role": "system", "content": system_prompt})
+    
+    for msg in messages:
+        role = msg.get("role", "user")
+        content = msg.get("content")
+        
+        # 处理 content 为列表的情况
+        if isinstance(content, list):
+            text_parts = []
+            for item in content:
+                if isinstance(item, dict):
+                    if item.get("type") == "text":
+                        text_parts.append(item.get("text", ""))
+                    elif item.get("type") == "image":
+                        # Claude 图片格式
+                        source = item.get("source", {})
+                        if source.get("type") == "base64":
+                            media_type = source.get("media_type", "image/jpeg")
+                            data = source.get("data", "")
+                            text_parts.append(f"[Image: data:{media_type};base64,{data[:50]}...]")
+            content = "\n".join(text_parts)
+        
+        openai_messages.append({"role": role, "content": content})
+    
+    return {
+        "model": claude_request.get("model", "claude-3-5-sonnet-20241022"),
+        "messages": openai_messages,
+        "temperature": claude_request.get("temperature", 1.0),
+        "max_tokens": claude_request.get("max_tokens", 4096),
+        "stream": claude_request.get("stream", False),
+    }
+
+
+def call_claude_via_openai(openai_request, claude_api_key):
+    """
+    通过 OpenAI 格式调用 Claude API
+    :param openai_request: OpenAI 格式的请求
+    :param claude_api_key: Claude API Key
+    :return: Response 对象
+    """
+    try:
+        headers = {
+            "Authorization": f"Bearer {claude_api_key}",
+            "Content-Type": "application/json",
+        }
+        
+        resp = requests.post(
+            "https://api.anthropic.com/v1/messages",
+            headers=headers,
+            json=openai_request,
+            stream=openai_request.get("stream", False),
+            impersonate="safari15_3",
+        )
+        
+        return resp
+        
+    except Exception as e:
+        logger.error(f"[call_claude_via_openai] 请求异常: {e}")
+        raise
 
 
 def claude_to_openai_messages(claude_messages: list, system_prompt: str = None):
